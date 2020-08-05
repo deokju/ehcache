@@ -1,0 +1,43 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="ehcache.xsd"
+         updateCheck="true" monitoring="autodetect"
+         dynamicConfig="true">
+<!--    <cacheManagerPeerProviderFactory
+            class="net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"
+            properties="peerDiscovery=manual,
+             rmiUrls=//192.168.20.232:40001/events|//192.168.20.155:40001/events"/>-->
+
+    <!--
+        WAS가 2대 일 경우 A,B라고 가정
+        cacheManagerPeerProviderFactory rmiUrl는 본인이 아닌 대상(본인이 A라면 B에 대한정보를 기입)
+    -->
+    <cacheManagerPeerProviderFactory
+            class="net.sf.ehcache.distribution.RMICacheManagerPeerProviderFactory"
+            properties="peerDiscovery=manual,
+             rmiUrls=//192.168.20.155:40001/events"/>
+
+    <!--
+        WAS가 2대 일 경우 A,B라고 가정
+        cacheManagerPeerListenerFactory hostName, port는 본인 WAS의 정보를 기입
+    -->
+    <cacheManagerPeerListenerFactory
+            class="net.sf.ehcache.distribution.RMICacheManagerPeerListenerFactory"
+            properties="hostName=localhost, port=40001, socketTimeoutMillis=2000"/>
+    <cache name="events"
+           maxEntriesLocalHeap="5000"
+           eternal="false"
+           overflowToDisk="false"
+           memoryStoreEvictionPolicy="LFU">
+
+        <bootstrapCacheLoaderFactory class="net.sf.ehcache.distribution.RMIBootstrapCacheLoaderFactory"
+                properties="bootstrapAsynchronously=true, maximumChunkSizeBytes=5000000" />
+
+        <cacheEventListenerFactory
+                class="net.sf.ehcache.distribution.RMICacheReplicatorFactory"
+                properties="replicateAsynchronously=false,
+            replicatePuts=true,
+            replicateUpdates=true,
+            replicateUpdatesViaCopy=true,
+            replicateRemovals=true"/>
+    </cache>
+</ehcache>
